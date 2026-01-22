@@ -21,6 +21,8 @@ declare module "next-auth" {
         tenantId: string
         companyId: string
         companyName: string
+        accessToken: string
+        refreshToken: string
       }
 }
 
