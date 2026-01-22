@@ -28,12 +28,14 @@ declare module "next-auth" {
 
 declare module "next-auth/jwt" {
   interface JWT {
-    id: string
-    tenantId: string
-    companyId: string
-    companyName: string
-    accessToken: string
-    refreshToken: string
+    id?: string
+    email?: string
+    name?: string
+    tenantId?: string
+    companyId?: string
+    companyName?: string
+    accessToken?: string
+    refreshToken?: string
   }
 }
 
