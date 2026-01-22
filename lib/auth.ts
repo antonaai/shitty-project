@@ -4,25 +4,25 @@ import CredentialsProvider from "next-auth/providers/credentials"
 declare module "next-auth" {
     interface Session {
         user: {
-          id: string
-          email: string
-          name: string
-          tenantId: string
-          companyId: string
-          companyName: string
-          accessToken: string
-          refreshToken: string
+          id?: string
+          email?: string
+          name?: string
+          tenantId?: string
+          companyId?: string
+          companyName?: string
+          accessToken?: string
+          refreshToken?: string
         }
       }
       interface User {
-        id: string
-        email: string
-        name: string
-        tenantId: string
-        companyId: string
-        companyName: string
-        accessToken: string
-        refreshToken: string
+        id?: string
+        email?: string
+        name?: string
+        tenantId?: string
+        companyId?: string
+        companyName?: string
+        accessToken?: string
+        refreshToken?: string
       }
 }
 
