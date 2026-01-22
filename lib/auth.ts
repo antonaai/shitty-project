@@ -54,7 +54,7 @@ export const authOptions: NextAuthOptions = {
 
         try {
           const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
+            `${process.env.NEXTAUTH_URL}/auth/login`,
             {
               method: "POST",
               headers: {
