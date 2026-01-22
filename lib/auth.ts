@@ -2,14 +2,34 @@ import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 
 declare module "next-auth" {
-  interface Session {
-    accessToken: string
-    refreshToken: string
-  }
+    interface Session {
+        user: {
+          id: string
+          email: string
+          name: string
+          tenantId: string
+          companyId: string
+          companyName: string
+          accessToken: string
+          refreshToken: string
+        }
+      }
+      interface User {
+        id: string
+        email: string
+        name: string
+        tenantId: string
+        companyId: string
+        companyName: string
+      }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
+    id: string
+    tenantId: string
+    companyId: string
+    companyName: string
     accessToken: string
     refreshToken: string
   }
@@ -57,12 +77,16 @@ export const authOptions: NextAuthOptions = {
            * }
            */
 
-          return {
-            id: credentials.email, // o un id vero se il backend lo restituisce
-            email: credentials.email,
+           return {
+            id: data.userId,
+            email: data.userEmail,
+            name: data.userName,
+            tenantId: data.tenantId,
+            companyId: data.companyId,
+            companyName: data.companyName,
             accessToken: data.accessToken,
             refreshToken: data.refreshToken,
-          }
+           }
         } catch (error) {
           console.error("Login error:", error)
           return null
@@ -74,15 +98,29 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.accessToken = (user as any).accessToken
-        token.refreshToken = (user as any).refreshToken
+        token.id = user.id
+        token.email = user.email
+        token.name = user.name
+        token.tenantId = user.tenantId
+        token.companyId = user.companyId
+        token.companyName = user.companyName
+        token.accessToken = user.accessToken
+        token.refreshToken = user.refreshToken
       }
       return token
     },
 
     async session({ session, token }) {
-      session.accessToken = token.accessToken
-      session.refreshToken = token.refreshToken
+      if (session.user) {
+        session.user.id = token.id
+        session.user.email = token.email
+        session.user.name = token.name
+        session.user.tenantId = token.tenantId
+        session.user.companyId = token.companyId
+        session.user.companyName = token.companyName
+        session.user.accessToken = token.accessToken
+        session.user.refreshToken = token.refreshToken
+      }
       return session
     },
   },
