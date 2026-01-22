@@ -1,56 +1,17 @@
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 
-// Mock users database
-const DEMO_USERS = [
-  {
-    id: "1",
-    email: "demo@azienda1.com",
-    password: "password",
-    name: "Mario Rossi",
-    tenantId: "tenant_1",
-    companyId: "company_1",
-    companyName: "Azienda Demo SRL",
-  },
-  {
-    id: "2",
-    email: "admin@test.com",
-    password: "admin123",
-    name: "Admin Test",
-    tenantId: "tenant_2",
-    companyId: "company_2",
-    companyName: "Test Company",
-  },
-]
-
 declare module "next-auth" {
   interface Session {
-    user: {
-      id: string
-      email: string
-      name: string
-      tenantId: string
-      companyId: string
-      companyName: string
-    }
-  }
-
-  interface User {
-    id: string
-    email: string
-    name: string
-    tenantId: string
-    companyId: string
-    companyName: string
+    accessToken: string
+    refreshToken: string
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
-    id: string
-    tenantId: string
-    companyId: string
-    companyName: string
+    accessToken: string
+    refreshToken: string
   }
 }
 
@@ -59,7 +20,7 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email", placeholder: "demo@azienda1.com" },
+        email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
@@ -67,51 +28,72 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        // Find user in mock database
-        const user = DEMO_USERS.find(
-          (u) => u.email === credentials.email && u.password === credentials.password
-        )
+        try {
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                email: credentials.email,
+                password: credentials.password,
+              }),
+            }
+          )
 
-        if (!user) {
+          if (!res.ok) {
+            return null
+          }
+
+          const data = await res.json()
+
+          /**
+           * Atteso dal backend:
+           * {
+           *   accessToken: string,
+           *   refreshToken: string
+           * }
+           */
+
+          return {
+            id: credentials.email, // o un id vero se il backend lo restituisce
+            email: credentials.email,
+            accessToken: data.accessToken,
+            refreshToken: data.refreshToken,
+          }
+        } catch (error) {
+          console.error("Login error:", error)
           return null
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          tenantId: user.tenantId,
-          companyId: user.companyId,
-          companyName: user.companyName,
         }
       },
     }),
   ],
+
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id
-        token.tenantId = user.tenantId
-        token.companyId = user.companyId
-        token.companyName = user.companyName
+        token.accessToken = (user as any).accessToken
+        token.refreshToken = (user as any).refreshToken
       }
       return token
     },
+
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id
-        session.user.tenantId = token.tenantId
-        session.user.companyId = token.companyId
-        session.user.companyName = token.companyName
-      }
+      session.accessToken = token.accessToken
+      session.refreshToken = token.refreshToken
       return session
     },
   },
+
   pages: {
     signIn: "/login",
   },
+
   session: {
     strategy: "jwt",
   },
-  secret: process.env.NEXTAUTH_SECRET || "demo-secret-key-change-in-production-12345",
+
+  secret: process.env.NEXTAUTH_SECRET,
 }
