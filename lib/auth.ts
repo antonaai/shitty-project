@@ -51,10 +51,13 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) {
           return null
         }
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL
 
+        if (!apiUrl) {
+          throw new Error("NEXT_PUBLIC_API_URL is not defined")
+        }
         try {
-          const res = await fetch(
-            `${process.env.NEXTAUTH_URL}/auth/login`,
+            const res = await fetch(`${apiUrl}/auth/login`, {
             {
               method: "POST",
               headers: {
