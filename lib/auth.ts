@@ -1,27 +1,8 @@
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 
-// Mock users database
-const DEMO_USERS = [
-  {
-    id: "1",
-    email: "demo@azienda1.com",
-    password: "password",
-    name: "Mario Rossi",
-    tenantId: "tenant_1",
-    companyId: "company_1",
-    companyName: "Azienda Demo SRL",
-  },
-  {
-    id: "2",
-    email: "admin@test.com",
-    password: "admin123",
-    name: "Admin Test",
-    tenantId: "tenant_2",
-    companyId: "company_2",
-    companyName: "Test Company",
-  },
-]
+// API configuration
+const API_BASE_URL = "https://shitty-project-be.onrender.com"
 
 declare module "next-auth" {
   interface Session {
@@ -33,6 +14,7 @@ declare module "next-auth" {
       companyId: string
       companyName: string
     }
+    accessToken: string
   }
 
   interface User {
@@ -42,6 +24,7 @@ declare module "next-auth" {
     tenantId: string
     companyId: string
     companyName: string
+    accessToken: string
   }
 }
 
@@ -51,6 +34,7 @@ declare module "next-auth/jwt" {
     tenantId: string
     companyId: string
     companyName: string
+    accessToken: string
   }
 }
 
@@ -59,30 +43,53 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email", placeholder: "demo@azienda1.com" },
+        username: { label: "Username", type: "text", placeholder: "admin" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        if (!credentials?.username || !credentials?.password) {
           return null
         }
 
-        // Find user in mock database
-        const user = DEMO_USERS.find(
-          (u) => u.email === credentials.email && u.password === credentials.password
-        )
+        try {
+          // Call external API for authentication
+          const response = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              username: credentials.username,
+              password: credentials.password,
+            }),
+          })
 
-        if (!user) {
+          if (!response.ok) {
+            console.error("Authentication failed:", response.statusText)
+            return null
+          }
+
+          const data = await response.json()
+
+          if (!data.accessToken) {
+            console.error("No access token received")
+            return null
+          }
+
+          // Return user object with accessToken
+          // You can fetch additional user details from another endpoint if needed
+          return {
+            id: credentials.username, // Using username as ID for now
+            email: `${credentials.username}@example.com`, // Placeholder
+            name: credentials.username,
+            tenantId: "external", // Placeholder - update if API provides this
+            companyId: "external", // Placeholder - update if API provides this
+            companyName: "External Company", // Placeholder - update if API provides this
+            accessToken: data.accessToken,
+          }
+        } catch (error) {
+          console.error("Authentication error:", error)
           return null
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          tenantId: user.tenantId,
-          companyId: user.companyId,
-          companyName: user.companyName,
         }
       },
     }),
@@ -94,6 +101,7 @@ export const authOptions: NextAuthOptions = {
         token.tenantId = user.tenantId
         token.companyId = user.companyId
         token.companyName = user.companyName
+        token.accessToken = user.accessToken
       }
       return token
     },
@@ -104,6 +112,7 @@ export const authOptions: NextAuthOptions = {
         session.user.companyId = token.companyId
         session.user.companyName = token.companyName
       }
+      session.accessToken = token.accessToken
       return session
     },
   },
