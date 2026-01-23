@@ -2,7 +2,7 @@ import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 
 // API configuration
-const API_BASE_URL = "https://shitty-project-be.onrender.com"
+const API_BASE_URL = process.env.API_BASE_URL || "https://shitty-project-be.onrender.com"
 
 declare module "next-auth" {
   interface Session {

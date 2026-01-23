@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "./auth"
 
 // API configuration
-const API_BASE_URL = "https://shitty-project-be.onrender.com"
+const API_BASE_URL = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://shitty-project-be.onrender.com"
 
 /**
  * Utility function to make authenticated API requests to the external backend
