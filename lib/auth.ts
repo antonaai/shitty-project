@@ -1,8 +1,19 @@
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 
-// API configuration
-const API_BASE_URL = process.env.API_BASE_URL || "https://shitty-project-be.onrender.com"
+const API_BASE_URL = "https://shitty-project-be.onrender.com"
+
+// Tipo per la risposta dell'API di login
+interface LoginResponse {
+  accessToken: string
+  refreshToken: string
+  userId: string
+  userEmail: string
+  userName: string
+  companyName: string
+  tenantId: string
+  companyId: string
+}
 
 declare module "next-auth" {
   interface Session {
@@ -15,6 +26,7 @@ declare module "next-auth" {
       companyName: string
     }
     accessToken: string
+    refreshToken: string
   }
 
   interface User {
@@ -25,6 +37,7 @@ declare module "next-auth" {
     companyId: string
     companyName: string
     accessToken: string
+    refreshToken: string
   }
 }
 
@@ -35,6 +48,7 @@ declare module "next-auth/jwt" {
     companyId: string
     companyName: string
     accessToken: string
+    refreshToken: string
   }
 }
 
@@ -43,52 +57,47 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        username: { label: "Username", type: "text", placeholder: "admin" },
+        email: { label: "Email", type: "email", placeholder: "admin@acme.it" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.username || !credentials?.password) {
+        if (!credentials?.email || !credentials?.password) {
           return null
         }
 
         try {
-          // Call external API for authentication
+          // Chiamata all'API esterna per l'autenticazione
           const response = await fetch(`${API_BASE_URL}/auth/login`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              username: credentials.username,
+              email: credentials.email,
               password: credentials.password,
             }),
           })
 
           if (!response.ok) {
-            console.error("Authentication failed:", response.statusText)
+            console.error("Login failed:", response.status, response.statusText)
             return null
           }
 
-          const data = await response.json()
+          const data: LoginResponse = await response.json()
 
-          if (!data.accessToken) {
-            console.error("No access token received")
-            return null
-          }
-
-          // Return user object with accessToken
-          // You can fetch additional user details from another endpoint if needed
+          // Ritorna i dati dell'utente con i token
           return {
-            id: credentials.username, // Using username as ID for now
-            email: `${credentials.username}@example.com`, // Placeholder
-            name: credentials.username,
-            tenantId: "external", // Placeholder - update if API provides this
-            companyId: "external", // Placeholder - update if API provides this
-            companyName: "External Company", // Placeholder - update if API provides this
+            id: data.userId,
+            email: data.userEmail,
+            name: data.userName,
+            tenantId: data.tenantId,
+            companyId: data.companyId,
+            companyName: data.companyName,
             accessToken: data.accessToken,
+            refreshToken: data.refreshToken,
           }
         } catch (error) {
-          console.error("Authentication error:", error)
+          console.error("Authorization error:", error)
           return null
         }
       },
@@ -96,16 +105,19 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
+      // Salva i dati dell'utente e i token nel JWT alla prima autenticazione
       if (user) {
         token.id = user.id
         token.tenantId = user.tenantId
         token.companyId = user.companyId
         token.companyName = user.companyName
         token.accessToken = user.accessToken
+        token.refreshToken = user.refreshToken
       }
       return token
     },
     async session({ session, token }) {
+      // Passa i dati del JWT alla sessione
       if (session.user) {
         session.user.id = token.id
         session.user.tenantId = token.tenantId
@@ -113,6 +125,7 @@ export const authOptions: NextAuthOptions = {
         session.user.companyName = token.companyName
       }
       session.accessToken = token.accessToken
+      session.refreshToken = token.refreshToken
       return session
     },
   },

@@ -12,7 +12,7 @@ import Link from "next/link"
 
 export default function LoginPage() {
   const router = useRouter()
-  const [username, setUsername] = useState("")
+  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
@@ -24,7 +24,7 @@ export default function LoginPage() {
 
     try {
       const result = await signIn("credentials", {
-        username,
+        email,
         password,
         redirect: false,
       })
@@ -57,13 +57,13 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="username"
-                type="text"
-                placeholder="admin"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                type="email"
+                placeholder="admin@acme.it"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
               />
@@ -96,8 +96,8 @@ export default function LoginPage() {
           <div className="mt-6 p-4 bg-muted rounded-md">
             <p className="text-sm font-medium mb-2">Credenziali Demo:</p>
             <div className="text-xs text-muted-foreground space-y-1">
-              <p>Username: admin</p>
-              <p>Password: password</p>
+              <p>Email: admin@acme.it</p>
+              <p>Password: prova</p>
             </div>
           </div>
 
