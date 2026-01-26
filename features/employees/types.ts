@@ -1,9 +1,9 @@
 export interface Employee {
-  id: string
+  id: number
   firstName: string
   lastName: string
   email: string
-  phone: string
+  phone: string | null
   role: string
   hireDate: string
   companyId: string
@@ -14,7 +14,7 @@ export interface CreateEmployeeDto {
   firstName: string
   lastName: string
   email: string
-  phone: string
+  phone: string | null
   role: string
   hireDate: string
 }

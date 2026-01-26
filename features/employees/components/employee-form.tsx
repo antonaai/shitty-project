@@ -26,7 +26,7 @@ const formSchema = z.object({
   firstName: z.string().min(2, "Il nome deve contenere almeno 2 caratteri"),
   lastName: z.string().min(2, "Il cognome deve contenere almeno 2 caratteri"),
   email: z.string().email("Email non valida"),
-  phone: z.string().min(1, "Il telefono è obbligatorio"),
+  phone: z.string().nullable().optional(),
   role: z.string().min(1, "Il ruolo è obbligatorio"),
   hireDate: z.string().min(1, "La data di assunzione è obbligatoria"),
 })
@@ -105,7 +105,12 @@ export function EmployeeForm({ employee, onSubmit, onCancel, isLoading }: Employ
             <FormItem>
               <FormLabel>Telefono</FormLabel>
               <FormControl>
-                <Input placeholder="+39 340 123 4567" {...field} />
+                <Input
+                  placeholder="+39 340 123 4567"
+                  {...field}
+                  value={field.value || ""}
+                  onChange={(e) => field.onChange(e.target.value || null)}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

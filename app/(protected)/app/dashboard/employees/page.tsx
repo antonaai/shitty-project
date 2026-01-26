@@ -271,7 +271,7 @@ export default function EmployeesPage() {
                   <TableCell>
                     <Badge variant="secondary">{employee.role}</Badge>
                   </TableCell>
-                  <TableCell>{employee.phone}</TableCell>
+                  <TableCell>{employee.phone || "-"}</TableCell>
                   <TableCell>{formatDate(employee.hireDate)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">

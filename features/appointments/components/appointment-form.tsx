@@ -74,7 +74,7 @@ export function AppointmentForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       clientId: appointment?.clientId || "",
-      employeeId: appointment?.employeeId || "",
+      employeeId: appointment?.employeeId ? String(appointment.employeeId) : "",
       date: appointment?.date || new Date().toISOString().split("T")[0],
       time: appointment?.time || "09:00",
       notes: appointment?.notes || "",
@@ -124,7 +124,7 @@ export function AppointmentForm({
                 </FormControl>
                 <SelectContent>
                   {employees.map((employee) => (
-                    <SelectItem key={employee.id} value={employee.id}>
+                    <SelectItem key={employee.id} value={String(employee.id)}>
                       {employee.firstName} {employee.lastName}
                     </SelectItem>
                   ))}
