@@ -1,11 +1,11 @@
 import { Employee, CreateEmployeeDto, UpdateEmployeeDto } from "./types"
 
-const API_BASE_URL = "https://shitty-project-be.onrender.com"
+const API_BASE_URL = "/api/employees"
 
 const handleResponse = async <T>(response: Response): Promise<T> => {
   if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`API Error: ${response.status} - ${errorText}`)
+    const errorData = await response.json().catch(() => ({ error: "Unknown error" }))
+    throw new Error(errorData.error || `API Error: ${response.status}`)
   }
   return response.json()
 }
@@ -13,10 +13,8 @@ const handleResponse = async <T>(response: Response): Promise<T> => {
 export const employeesRepository = {
   async getAll(tenantId: string): Promise<Employee[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/dipendenti`)
-      const allEmployees = await handleResponse<Employee[]>(response)
-      // Filter by companyId if needed (tenantId)
-      return allEmployees.filter((e) => e.companyId === tenantId)
+      const response = await fetch(API_BASE_URL)
+      return handleResponse<Employee[]>(response)
     } catch (error) {
       console.error("Error fetching employees:", error)
       throw error
@@ -25,16 +23,11 @@ export const employeesRepository = {
 
   async getById(id: number, tenantId: string): Promise<Employee | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/dipendenti/${id}`)
+      const response = await fetch(`${API_BASE_URL}/${id}`)
       if (response.status === 404) {
         return null
       }
-      const employee = await handleResponse<Employee>(response)
-      // Verify companyId matches tenantId
-      if (employee.companyId !== tenantId) {
-        return null
-      }
-      return employee
+      return handleResponse<Employee>(response)
     } catch (error) {
       console.error("Error fetching employee:", error)
       throw error
@@ -43,16 +36,12 @@ export const employeesRepository = {
 
   async create(data: CreateEmployeeDto, tenantId: string): Promise<Employee> {
     try {
-      const payload = {
-        ...data,
-        companyId: tenantId,
-      }
-      const response = await fetch(`${API_BASE_URL}/dipendenti`, {
+      const response = await fetch(API_BASE_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(data),
       })
       return handleResponse<Employee>(response)
     } catch (error) {
@@ -67,19 +56,16 @@ export const employeesRepository = {
     tenantId: string
   ): Promise<Employee | null> {
     try {
-      // First verify the employee exists and belongs to the tenant
-      const existing = await this.getById(id, tenantId)
-      if (!existing) {
-        return null
-      }
-
-      const response = await fetch(`${API_BASE_URL}/dipendenti/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
       })
+      if (response.status === 404) {
+        return null
+      }
       return handleResponse<Employee>(response)
     } catch (error) {
       console.error("Error updating employee:", error)
@@ -89,13 +75,7 @@ export const employeesRepository = {
 
   async delete(id: number, tenantId: string): Promise<boolean> {
     try {
-      // First verify the employee exists and belongs to the tenant
-      const existing = await this.getById(id, tenantId)
-      if (!existing) {
-        return false
-      }
-
-      const response = await fetch(`${API_BASE_URL}/dipendenti/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/${id}`, {
         method: "DELETE",
       })
       if (!response.ok) {
