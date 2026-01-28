@@ -61,6 +61,8 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
+        console.log("CALLING EXTERNAL LOGIN API")
+
         if (!credentials?.email || !credentials?.password) {
           return null
         }
@@ -77,6 +79,7 @@ export const authOptions: NextAuthOptions = {
               password: credentials.password,
             }),
           })
+          console.log("STATUS", response.status)
 
           if (!response.ok) {
             console.error("Login failed:", response.status, response.statusText)
